@@ -33,6 +33,9 @@
 <body>
 <header>
 <nav>
+  <a href="#tip">Tip</a>
+  <a href="#time">Time</a>
+  <a href="#datediff">Date Diff</a>
   <a href="#percentage">Percentage</a>
   <a href="#discount">Discount</a>
   <a href="#bmi">BMI</a>
@@ -154,6 +157,52 @@
       <button id="age_btn">Calculate</button>
       <div id="age_out" class="result"></div>
     </section>
+
+    <!-- Tip -->
+<section id="tip" class="card">
+  <h2>Tip Calculator</h2>
+  <label>Bill amount ($)
+    <input id="tip_bill" type="number" step="any" placeholder="e.g., 58.20">
+  </label>
+  <label>Tip (%)
+    <input id="tip_pct" type="number" step="any" placeholder="e.g., 18">
+  </label>
+  <label>Split (people)
+    <input id="tip_split" type="number" step="1" placeholder="e.g., 2">
+  </label>
+  <button id="tip_btn">Calculate</button>
+  <div id="tip_out" class="result"></div>
+</section>
+
+<!-- Time -->
+<section id="time" class="card">
+  <h2>Time Converter</h2>
+  <p class="small" style="margin:0 0 8px;">Convert hours ↔ minutes ↔ seconds.</p>
+  <label>Hours
+    <input id="time_h" type="number" step="any" placeholder="e.g., 1.5">
+  </label>
+  <label>Minutes
+    <input id="time_m" type="number" step="any" placeholder="e.g., 90">
+  </label>
+  <label>Seconds
+    <input id="time_s" type="number" step="any" placeholder="e.g., 5400">
+  </label>
+  <button id="time_btn">Convert</button>
+  <div id="time_out" class="result"></div>
+</section>
+
+<!-- Date difference -->
+<section id="datediff" class="card">
+  <h2>Days Between Two Dates</h2>
+  <label>Start date
+    <input id="date_a" type="date">
+  </label>
+  <label>End date
+    <input id="date_b" type="date">
+  </label>
+  <button id="date_btn">Calculate</button>
+  <div id="date_out" class="result"></div>
+</section>
 
   </div>
 
@@ -308,6 +357,98 @@
     const { years, months, days } = diffYMD(dob, today);
     const totalDays = Math.floor((today - dob) / (1000*60*60*24));
     out.textContent = `Age: ${years} years, ${months} months, ${days} days\nTotal days: ${totalDays.toLocaleString()}`;
+  });
+
+    // Tip
+  document.getElementById('tip_btn').addEventListener('click', () => {
+    const bill = parseFloat(document.getElementById('tip_bill').value);
+    const pct = parseFloat(document.getElementById('tip_pct').value);
+    const splitRaw = document.getElementById('tip_split').value;
+    const split = splitRaw ? parseInt(splitRaw, 10) : 1;
+    const out = document.getElementById('tip_out');
+
+    if (!Number.isFinite(bill) || bill < 0 || !Number.isFinite(pct) || pct < 0 || !Number.isFinite(split) || split <= 0) {
+      out.textContent = 'Enter valid numbers.';
+      return;
+    }
+
+    const tip = bill * (pct / 100);
+    const total = bill + tip;
+    const perPerson = total / split;
+
+    out.textContent =
+      `Tip: $${fmt(tip, 2)}\nTotal: $${fmt(total, 2)}\nPer person (${split}): $${fmt(perPerson, 2)}`;
+  });
+
+  // Time converter
+  document.getElementById('time_btn').addEventListener('click', () => {
+    const hVal = document.getElementById('time_h').value.trim();
+    const mVal = document.getElementById('time_m').value.trim();
+    const sVal = document.getElementById('time_s').value.trim();
+    const out = document.getElementById('time_out');
+
+    const hasH = hVal !== '';
+    const hasM = mVal !== '';
+    const hasS = sVal !== '';
+
+    if (!hasH && !hasM && !hasS) {
+      out.textContent = 'Enter a value in at least one field.';
+      return;
+    }
+    if ((hasH ? 1 : 0) + (hasM ? 1 : 0) + (hasS ? 1 : 0) > 1) {
+      out.textContent = 'Fill only ONE field at a time (hours OR minutes OR seconds).';
+      return;
+    }
+
+    if (hasH) {
+      const h = parseFloat(hVal);
+      if (!Number.isFinite(h)) { out.textContent = 'Enter a valid number of hours.'; return; }
+      const mins = h * 60;
+      const secs = mins * 60;
+      document.getElementById('time_m').value = fmt(mins, 6);
+      document.getElementById('time_s').value = fmt(secs, 6);
+      out.textContent = `${fmt(h, 6)} hours = ${fmt(mins, 6)} minutes = ${fmt(secs, 6)} seconds`;
+      return;
+    }
+
+    if (hasM) {
+      const m = parseFloat(mVal);
+      if (!Number.isFinite(m)) { out.textContent = 'Enter a valid number of minutes.'; return; }
+      const hours = m / 60;
+      const secs = m * 60;
+      document.getElementById('time_h').value = fmt(hours, 6);
+      document.getElementById('time_s').value = fmt(secs, 6);
+      out.textContent = `${fmt(m, 6)} minutes = ${fmt(hours, 6)} hours = ${fmt(secs, 6)} seconds`;
+      return;
+    }
+
+    const s = parseFloat(sVal);
+    if (!Number.isFinite(s)) { out.textContent = 'Enter a valid number of seconds.'; return; }
+    const mins = s / 60;
+    const hours = mins / 60;
+    document.getElementById('time_m').value = fmt(mins, 6);
+    document.getElementById('time_h').value = fmt(hours, 6);
+    out.textContent = `${fmt(s, 6)} seconds = ${fmt(mins, 6)} minutes = ${fmt(hours, 6)} hours`;
+  });
+
+  // Date difference
+  document.getElementById('date_btn').addEventListener('click', () => {
+    const aVal = document.getElementById('date_a').value;
+    const bVal = document.getElementById('date_b').value;
+    const out = document.getElementById('date_out');
+
+    if (!aVal || !bVal) { out.textContent = 'Select both dates.'; return; }
+
+    const a = new Date(aVal + 'T00:00:00');
+    const b = new Date(bVal + 'T00:00:00');
+
+    const ms = b - a;
+    const days = Math.round(ms / (1000 * 60 * 60 * 24));
+
+    const absDays = Math.abs(days);
+    const direction = days === 0 ? 'Same day.' : (days > 0 ? `${absDays} days after start date.` : `${absDays} days before start date.`);
+
+    out.textContent = `Difference: ${days} day(s)\n${direction}`;
   });
 </script>
 </body>
